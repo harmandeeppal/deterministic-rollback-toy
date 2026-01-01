@@ -1,0 +1,17 @@
+{
+    "name": "DeterministicRollback.Entities",
+    "rootNamespace": "DeterministicRollback.Entities",
+    "references": [
+        "DeterministicRollback.Core",
+        "DeterministicRollback.Networking"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

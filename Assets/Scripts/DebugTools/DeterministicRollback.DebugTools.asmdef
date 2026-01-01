@@ -1,0 +1,17 @@
+{
+    "name": "DeterministicRollback.DebugTools",
+    "rootNamespace": "DeterministicRollback.DebugTools",
+    "references": [
+        "DeterministicRollback.Core",
+        "DeterministicRollback.Entities"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

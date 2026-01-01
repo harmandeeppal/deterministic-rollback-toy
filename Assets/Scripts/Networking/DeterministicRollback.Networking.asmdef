@@ -1,0 +1,16 @@
+{
+    "name": "DeterministicRollback.Networking",
+    "rootNamespace": "DeterministicRollback.Networking",
+    "references": [
+        "DeterministicRollback.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
