@@ -2,7 +2,7 @@
     "name": "DeterministicRollback.Networking",
     "rootNamespace": "DeterministicRollback.Networking",
     "references": [
-        "DeterministicRollback.Core"
+        "GUID:419a949562f3e254286b18f50facdc7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -2,8 +2,12 @@ using NUnit.Framework;
 using UnityEngine;
 using DeterministicRollback.Core;
 
-namespace DeterministicRollback.Tests
+namespace DeterministicRollback.Tests.Editor
 {
+    /// <summary>
+    /// Phase 1 tests - Pure unit tests for core data structures and deterministic physics.
+    /// All tests are Edit Mode compatible (no scene/MonoBehaviour dependencies).
+    /// </summary>
     public class Phase1Tests
     {
         // ========== Step 1.2: RingBuffer Tests ==========

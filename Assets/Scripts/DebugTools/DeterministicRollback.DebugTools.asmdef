@@ -2,8 +2,8 @@
     "name": "DeterministicRollback.DebugTools",
     "rootNamespace": "DeterministicRollback.DebugTools",
     "references": [
-        "DeterministicRollback.Core",
-        "DeterministicRollback.Entities"
+        "GUID:419a949562f3e254286b18f50facdc7c",
+        "GUID:6a25fc02f56b9684483875a55d4e10f1"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

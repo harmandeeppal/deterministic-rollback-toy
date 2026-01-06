@@ -1,0 +1,27 @@
+{
+  "name": "DeterministicRollback.EditorTests",
+  "rootNamespace": "DeterministicRollback.Tests.Editor",
+  "references": [
+    "GUID:27619889b8ba8c24980f49ee34dbb44a",
+    "GUID:0acc523941302664db1f4e527237feb3",
+    "GUID:e66b6e0ac2b1fbb4e83d0a5052b69efe",
+    "GUID:75469ad4d38634e559750d17036d5f7c",
+    "GUID:419a949562f3e254286b18f50facdc7c",
+    "GUID:c04d3943eda9bb04980532b6b11b1fa7"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false,
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

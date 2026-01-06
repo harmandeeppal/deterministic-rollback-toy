@@ -78,8 +78,5 @@ Thumbs.db
 # Visual Studio Code
 .vscode/
 
-# My project files
-COMPLETE_GUIDE.md
-deterministic_rollback_toy.JSON
-implementation_prompt.md
-git commit -m messages.txt
+# AgenticDevelopment folder
+AgenticDevelopment/
