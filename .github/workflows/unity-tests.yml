@@ -32,14 +32,11 @@ jobs:
         run: |
           if [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
             echo "UNITY_EMAIL and UNITY_PASSWORD set (preferred for Personal licenses)"
-          elif [ -n "$UNITY_LICENSE" ]; then
-            echo "UNITY_LICENSE set"
           else
-            echo "No Unity authentication found. Set UNITY_EMAIL + UNITY_PASSWORD or UNITY_LICENSE"
+            echo "No Unity authentication found. Set UNITY_EMAIL + UNITY_PASSWORD"
             exit 1
           fi
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
@@ -48,7 +45,6 @@ jobs:
         uses: game-ci/unity-test-runner@v4
         id: editmode-tests
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
@@ -63,7 +59,6 @@ jobs:
         uses: game-ci/unity-test-runner@v4
         id: playmode-tests
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
