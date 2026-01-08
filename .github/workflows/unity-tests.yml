@@ -1,0 +1,79 @@
+name: Unity Tests
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Unity Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+      
+      # Cache Unity Library folder
+      - name: Cache Unity Library
+        uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+      
+      # Run EditMode tests
+      - name: Run EditMode Tests
+        uses: game-ci/unity-test-runner@v4
+        id: editmode-tests
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: .
+          testMode: EditMode
+          artifactsPath: test-results/editmode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: EditMode Test Results
+      
+      # Run PlayMode tests
+      - name: Run PlayMode Tests
+        uses: game-ci/unity-test-runner@v4
+        id: playmode-tests
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: .
+          testMode: PlayMode
+          artifactsPath: test-results/playmode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: PlayMode Test Results
+      
+      # Upload test results as artifacts
+      - name: Upload EditMode Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: EditMode-Test-Results
+          path: test-results/editmode
+      
+      - name: Upload PlayMode Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: PlayMode-Test-Results
+          path: test-results/playmode
+      
+      # Report test results in PR
+      - name: Comment Test Results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Unity Test Results
+          path: 'test-results/**/*.xml'
+          reporter: java-junit
+          fail-on-error: true
