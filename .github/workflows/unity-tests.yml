@@ -30,7 +30,7 @@ jobs:
             -runTests `
             -testPlatform EditMode `
             -testResults "${{ github.workspace }}\test-results\editmode\results.xml"
-        shell: pwsh
+        shell: powershell
       
       # Run PlayMode tests using local Unity installation
       - name: Run PlayMode Tests
@@ -44,7 +44,7 @@ jobs:
             -runTests `
             -testPlatform PlayMode `
             -testResults "${{ github.workspace }}\test-results\playmode\results.xml"
-        shell: pwsh
+        shell: powershell
       
       # Upload test results as artifacts
       - name: Upload EditMode Test Results
