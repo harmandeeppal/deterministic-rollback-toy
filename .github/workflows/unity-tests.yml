@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: Run Unity Tests
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
       # Checkout repository
@@ -18,49 +18,33 @@ jobs:
         with:
           lfs: true
       
-      # Cache Unity Library folder
-      - name: Cache Unity Library
-        uses: actions/cache@v3
-        with:
-          path: Library
-          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-
-
-      # Activate Unity license using email/password
-      - name: Unity - Activate
-        uses: game-ci/unity-activate@v2
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-
-      # Run EditMode tests
+      # Run EditMode tests using local Unity installation
       - name: Run EditMode Tests
-        uses: game-ci/unity-test-runner@v4
-        id: editmode-tests
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          projectPath: .
-          testMode: EditMode
-          artifactsPath: test-results/editmode
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: EditMode Test Results
+        run: |
+          & "C:\Program Files\Unity\Hub\Editor\6000.3.2f1\Editor\Unity.exe" `
+            -batchmode `
+            -nographics `
+            -silent-crashes `
+            -logFile - `
+            -projectPath "${{ github.workspace }}" `
+            -runTests `
+            -testPlatform EditMode `
+            -testResults "${{ github.workspace }}\test-results\editmode\results.xml"
+        shell: pwsh
       
-      # Run PlayMode tests
+      # Run PlayMode tests using local Unity installation
       - name: Run PlayMode Tests
-        uses: game-ci/unity-test-runner@v4
-        id: playmode-tests
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with:
-          projectPath: .
-          testMode: PlayMode
-          artifactsPath: test-results/playmode
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: PlayMode Test Results
+        run: |
+          & "C:\Program Files\Unity\Hub\Editor\6000.3.2f1\Editor\Unity.exe" `
+            -batchmode `
+            -nographics `
+            -silent-crashes `
+            -logFile - `
+            -projectPath "${{ github.workspace }}" `
+            -runTests `
+            -testPlatform PlayMode `
+            -testResults "${{ github.workspace }}\test-results\playmode\results.xml"
+        shell: pwsh
       
       # Upload test results as artifacts
       - name: Upload EditMode Test Results
