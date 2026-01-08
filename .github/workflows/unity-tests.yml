@@ -27,15 +27,9 @@ jobs:
           restore-keys: |
             Library-
 
-      # Diagnostic: Confirm Unity authentication secrets are set
-      - name: Check Unity Authentication
-        run: |
-          if [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
-            echo "UNITY_EMAIL and UNITY_PASSWORD set (preferred for Personal licenses)"
-          else
-            echo "No Unity authentication found. Set UNITY_EMAIL + UNITY_PASSWORD"
-            exit 1
-          fi
+      # Activate Unity license using email/password
+      - name: Unity - Activate
+        uses: game-ci/unity-activate@v2
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
