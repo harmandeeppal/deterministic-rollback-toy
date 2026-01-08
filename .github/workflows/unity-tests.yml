@@ -27,17 +27,21 @@ jobs:
           restore-keys: |
             Library-
 
-      # Diagnostic: Confirm UNITY_LICENSE secret presence (no secret contents are echoed)
-      - name: Check UNITY_LICENSE secret presence
+      # Diagnostic: Confirm Unity authentication secrets are set
+      - name: Check Unity Authentication
         run: |
-          if [ -z "$UNITY_LICENSE" ]; then
-            echo "UNITY_LICENSE not set"
-            exit 1
-          else
+          if [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
+            echo "UNITY_EMAIL and UNITY_PASSWORD set (preferred for Personal licenses)"
+          elif [ -n "$UNITY_LICENSE" ]; then
             echo "UNITY_LICENSE set"
+          else
+            echo "No Unity authentication found. Set UNITY_EMAIL + UNITY_PASSWORD or UNITY_LICENSE"
+            exit 1
           fi
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
       # Run EditMode tests
       - name: Run EditMode Tests
@@ -45,6 +49,8 @@ jobs:
         id: editmode-tests
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           projectPath: .
           testMode: EditMode
@@ -58,6 +64,8 @@ jobs:
         id: playmode-tests
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           projectPath: .
           testMode: PlayMode
