@@ -26,7 +26,19 @@ jobs:
           key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
             Library-
-      
+
+      # Diagnostic: Confirm UNITY_LICENSE secret presence (no secret contents are echoed)
+      - name: Check UNITY_LICENSE secret presence
+        run: |
+          if [ -z "$UNITY_LICENSE" ]; then
+            echo "UNITY_LICENSE not set"
+            exit 1
+          else
+            echo "UNITY_LICENSE set"
+          fi
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
       # Run EditMode tests
       - name: Run EditMode Tests
         uses: game-ci/unity-test-runner@v4
