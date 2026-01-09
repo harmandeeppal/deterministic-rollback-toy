@@ -166,5 +166,37 @@ namespace DeterministicRollback.Entities
         {
             return StateBuffer.Contains(tick) ? StateBuffer[tick] : default;
         }
+
+        // Handshake support (Phase 5)
+        public uint lastServerConfirmedInputTick { get; private set; } = 0;
+        public const uint INPUT_BUFFER_HEADROOM = 2;
+
+        /// <summary>
+        /// Handle a WelcomePacket from the server and synchronize the client's timeline.
+        /// oneWayMs: configured one-way latency in milliseconds (UI slider value).
+        /// </summary>
+        public void HandleWelcomePacket(WelcomePacket welcome, float oneWayMs)
+        {
+            // RTT ticks calculation: ceil( (oneWayMs * 2) / tickMs ), minimum 3 ticks.
+            // Use double precision and subtract a tiny epsilon before Ceiling to avoid
+            // floating-point rounding causing exact multiples to round up.
+            double rttMs = oneWayMs * 2.0;
+            double tickMs = 1000.0 / 60.0;
+            uint rttTicks = (uint)Math.Ceiling(rttMs / tickMs - 1e-9);
+            if (rttTicks < 3u) rttTicks = 3u;
+
+            uint clientStartTick = welcome.startTick + rttTicks + INPUT_BUFFER_HEADROOM;
+
+            // Warp server state into client's timeline at clientStartTick - 1
+            var warped = welcome.startState;
+            warped.tick = clientStartTick - 1;
+            StateBuffer[clientStartTick - 1] = warped;
+
+            // Sync confirmed input tick
+            lastServerConfirmedInputTick = welcome.startState.confirmedInputTick;
+
+            // Set current tick to the clientStartTick (last simulated tick)
+            CurrentTick = clientStartTick;
+        }
     }
 }
