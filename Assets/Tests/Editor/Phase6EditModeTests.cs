@@ -2,6 +2,7 @@ using NUnit.Framework;
 using UnityEngine;
 using DeterministicRollback.Entities;
 using DeterministicRollback.Core;
+using DeterministicRollback.Networking;
 
 namespace DeterministicRollback.Tests
 {
@@ -29,8 +30,9 @@ namespace DeterministicRollback.Tests
             bool reconciled = false;
             client.OnReconciliationPerformed += () => reconciled = true;
 
-            // Send authoritative state
-            FakeNetworkPipe.OnStateReceived?.Invoke(correction);
+            // Send authoritative state via network pipe (no latency)
+            FakeNetworkPipe.SendState(correction, latencyMs: 0f, lossChance: 0f);
+            FakeNetworkPipe.ProcessPackets();
 
             // Trigger reconciliation (no time advance needed)
             client.UpdateWithDelta(0f);
@@ -47,8 +49,8 @@ namespace DeterministicRollback.Tests
             client.Initialize();
             client.InputProvider = () => Vector2.right;
 
-            // Simulate client 60 ticks ahead
-            for (int i = 0; i < 60; i++)
+            // Simulate client well beyond MAX_RESIM_STEPS to force hard snap
+            for (int i = 0; i < 400; i++)
             {
                 client.UpdateWithDelta(ClientEntity.FIXED_DELTA_TIME);
             }
@@ -56,9 +58,13 @@ namespace DeterministicRollback.Tests
             uint oldTick = client.CurrentTick;
 
             // Ancient server state (too old to reconcile)
-            var ancient = new StatePayload { tick = 1u, position = Vector2.zero, velocity = Vector2.zero, confirmedInputTick = 0 };
+            var ancient = new StatePayload { tick = 1u, position = new Vector2(100f, 0f), velocity = Vector2.zero, confirmedInputTick = 0 };
 
-            FakeNetworkPipe.OnStateReceived?.Invoke(ancient);
+            // Send ancient correction via network pipe
+            FakeNetworkPipe.SendState(ancient, latencyMs: 0f, lossChance: 0f);
+
+            // Process packets immediately (no latency)
+            FakeNetworkPipe.ProcessPackets();
 
             // Trigger reconciliation
             client.UpdateWithDelta(0f);
@@ -74,7 +80,8 @@ namespace DeterministicRollback.Tests
             client.Initialize();
             client.InputProvider = () => Vector2.right;
 
-            var server = new ServerEntity();
+            var go = new GameObject("ServerEntity_TestGO");
+            var server = go.AddComponent<ServerEntity>();
             server.Initialize();
 
             // Simulate server enough ticks so its current state tick is > 30
@@ -99,6 +106,9 @@ namespace DeterministicRollback.Tests
             Assert.IsTrue(reconciled);
             var corrected = client.GetState(30u);
             Assert.AreEqual(7f, corrected.position.x, 0.0001f);
+
+            // Cleanup server GameObject
+            Object.DestroyImmediate(go);
         }
     }
 }
