@@ -1,0 +1,72 @@
+name: Unity Tests
+
+on:
+  push:
+    branches: [ main, develop, feature/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Unity Tests
+    runs-on: self-hosted
+    
+    steps:
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+      
+      # Run EditMode tests using local Unity installation
+      - name: Run EditMode Tests
+        run: |
+          & "C:\Program Files\Unity\Hub\Editor\6000.3.2f1\Editor\Unity.exe" `
+            -batchmode `
+            -nographics `
+            -silent-crashes `
+            -logFile - `
+            -projectPath "${{ github.workspace }}" `
+            -runTests `
+            -testPlatform EditMode `
+            -testResults "${{ github.workspace }}\test-results\editmode\results.xml"
+        shell: powershell
+      
+      # Run PlayMode tests using local Unity installation
+      - name: Run PlayMode Tests
+        run: |
+          & "C:\Program Files\Unity\Hub\Editor\6000.3.2f1\Editor\Unity.exe" `
+            -batchmode `
+            -nographics `
+            -silent-crashes `
+            -logFile - `
+            -projectPath "${{ github.workspace }}" `
+            -runTests `
+            -testPlatform PlayMode `
+            -testResults "${{ github.workspace }}\test-results\playmode\results.xml"
+        shell: powershell
+      
+      # Upload test results as artifacts
+      - name: Upload EditMode Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: EditMode-Test-Results
+          path: test-results/editmode
+      
+      - name: Upload PlayMode Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PlayMode-Test-Results
+          path: test-results/playmode
+      
+      # Report test results in PR
+      - name: Comment Test Results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Unity Test Results
+          path: 'test-results/**/*.xml'
+          reporter: java-junit
+          fail-on-error: true
