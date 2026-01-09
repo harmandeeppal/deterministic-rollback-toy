@@ -135,6 +135,14 @@ namespace DeterministicRollback.Entities
             return new WelcomePacket { startTick = ServerTick, startState = CurrentState };
         }
 
+        /// <summary>
+        /// Emit an authoritative state correction (test helper). This sends a StatePayload via the FakeNetworkPipe.
+        /// </summary>
+        public void EmitStateCorrection(StatePayload correctedState, float latencyMs = 0f, float lossChance = 0f)
+        {
+            FakeNetworkPipe.SendState(correctedState, latencyMs, lossChance);
+        }
+
         // Helper for tests to inspect internal timer (not part of public API)
         public float GetTimer() => _timer;
     }
