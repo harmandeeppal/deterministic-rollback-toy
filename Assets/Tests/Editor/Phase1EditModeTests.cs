@@ -8,7 +8,7 @@ namespace DeterministicRollback.Tests.Editor
     /// Phase 1 tests - Pure unit tests for core data structures and deterministic physics.
     /// All tests are Edit Mode compatible (no scene/MonoBehaviour dependencies).
     /// </summary>
-    public class Phase1Tests
+    public class Phase1EditModeTests
     {
         // ========== Step 1.2: RingBuffer Tests ==========
 

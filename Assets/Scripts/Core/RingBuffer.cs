@@ -55,6 +55,11 @@ namespace DeterministicRollback.Core
         }
 
         /// <summary>
+        /// Expose capacity for validation and bounds checks.
+        /// </summary>
+        public uint Capacity => _capacity;
+
+        /// <summary>
         /// Invalidate range of ticks (inclusive).
         /// Used during hard snap to clear diverged speculative data.
         /// </summary>
