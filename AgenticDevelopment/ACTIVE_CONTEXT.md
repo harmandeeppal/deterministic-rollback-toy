@@ -47,13 +47,13 @@
   - Branch: `feature/phase-4` pushed; PR ready
 
 ### Current Focus 🚀
-- **PHASE 6: Reconciliation (Kickoff)**
-  - Next: Implement rollback/resimulation to reconcile client/server divergence.
-  - Pre-req: Merge `feature/phase-5` after CI green and review.
+- **PHASE 7: Render Interpolation (Kickoff)**
+  - Next: Implement render interpolation (1-tick delayed smoothing) and the Blue Cube renderer.
+  - Pre-req: Phase 6 merged to `main` and compliance verified.
 
-### ✅ PHASE 5: Handshake Protocol ✅ COMPLETE
-  - `ClientEntity.HandleWelcomePacket` implemented and tested (7/7 EditMode tests pass locally).
-  - Branch `feature/phase-5` pushed and CI workflow run triggered (awaiting green).
+### ✅ PHASE 6: Reconciliation ✅ COMPLETE
+  - Client reconciliation implemented and tested (5 tests + 2 negative; all pass EditMode locally). 
+  - ADR-013 recorded; `feature/phase-6` pushed and CI run succeeded on self-hosted runner (Jan 9, 2026).
 
 Phase 3 implementation finished with comprehensive test coverage. Self-hosted CI runner configured and validating all commits
 - Phase 3: Client Core (Simulation loop with input redundancy)
