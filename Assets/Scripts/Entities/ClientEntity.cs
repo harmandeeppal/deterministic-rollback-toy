@@ -92,6 +92,12 @@ namespace DeterministicRollback.Entities
         {
             _timer += deltaTime;
 
+            // Ensure we are subscribed to network callbacks (idempotent)
+            EnsureNetworkSubscriptions();
+
+            // Apply any buffered server state before processing ticks (batched reconciliation)
+            PerformReconciliationIfNeeded();
+
             // Compute available whole ticks deterministically using floor on double to avoid
             // round-off errors that can drop one tick in edge cases. Use a small absolute
             // epsilon large enough to cover float division underflow without affecting
@@ -171,12 +177,44 @@ namespace DeterministicRollback.Entities
         public uint lastServerConfirmedInputTick { get; private set; } = 0;
         public const uint INPUT_BUFFER_HEADROOM = 2;
 
+        // Reconciliation configuration (Phase 6)
+        public const uint BUFFER_SIZE = 4096u;
+        public const uint MAX_RESIM_STEPS = 300u;
+        public const float RECONCILIATION_TOLERANCE = 0.01f;
+        public const float CATASTROPHIC_DESYNC_THRESHOLD = 0.75f;
+
+        // Buffer to hold latest server state for batched reconciliation
+        private StatePayload? _latestServerState = null;
+        public event Action OnReconciliationPerformed;
+
+        /// <summary>
+        /// Initialize subscriptions for networking callbacks.
+        /// Safe to call multiple times; re-subscribes idempotently.
+        /// </summary>
+        private void EnsureNetworkSubscriptions()
+        {
+            // Subscribe once using idempotent lambdas
+            FakeNetworkPipe.OnStateReceived -= _OnStateReceived;
+            FakeNetworkPipe.OnStateReceived += _OnStateReceived;
+        }
+
+        private void _OnStateReceived(StatePayload state)
+        {
+            // Buffer only the newest state (batching)
+            if (!_latestServerState.HasValue || state.tick > _latestServerState.Value.tick)
+            {
+                _latestServerState = state;
+            }
+        }
+
         /// <summary>
         /// Handle a WelcomePacket from the server and synchronize the client's timeline.
         /// oneWayMs: configured one-way latency in milliseconds (UI slider value).
         /// </summary>
         public void HandleWelcomePacket(WelcomePacket welcome, float oneWayMs)
         {
+            EnsureNetworkSubscriptions();
+
             // RTT ticks calculation: ceil( (oneWayMs * 2) / tickMs ), minimum 3 ticks.
             // Use double precision and subtract a tiny epsilon before Ceiling to avoid
             // floating-point rounding causing exact multiples to round up.
@@ -197,6 +235,108 @@ namespace DeterministicRollback.Entities
 
             // Set current tick to the clientStartTick (last simulated tick)
             CurrentTick = clientStartTick;
+        }
+
+        /// <summary>
+        /// Perform reconciliation using the latest buffered server state if present.
+        /// Should be invoked once per UpdateWithDelta call before simulating new ticks.
+        /// </summary>
+        private void PerformReconciliationIfNeeded()
+        {
+            if (!_latestServerState.HasValue) return;
+
+            var serverState = _latestServerState.Value;
+            _latestServerState = null; // consume
+
+            // Guard: ensure we have reasonable history
+            if (CurrentTick == 0)
+            {
+                // Nothing to reconcile yet
+                return;
+            }
+
+            // Catastrophic desync guard: if server tick is far behind, trigger hard snap
+            uint delta = CurrentTick > serverState.tick ? CurrentTick - serverState.tick : 0u;
+            if (delta > (uint)(BUFFER_SIZE * CATASTROPHIC_DESYNC_THRESHOLD))
+            {
+                // Hard snap / reconnect behaviour: set current tick to server tick + 1
+                StateBuffer[serverState.tick] = serverState;
+                CurrentTick = serverState.tick + 1;
+                // Reset residual timer to avoid immediate backlog
+                _timer = 0f;
+                OnReconciliationPerformed?.Invoke();
+                return;
+            }
+
+            // History guard
+            if (serverState.tick + 1 >= CurrentTick)
+            {
+                // Server state is at or ahead of us; nothing to do
+                lastServerConfirmedInputTick = Math.Max(lastServerConfirmedInputTick, serverState.confirmedInputTick);
+                OnReconciliationPerformed?.Invoke();
+                return;
+            }
+
+            if (!StateBuffer.Contains(serverState.tick))
+            {
+                // Missing history - hard snap
+                StateBuffer[serverState.tick] = serverState;
+                CurrentTick = serverState.tick + 1;
+                _timer = 0f;
+                lastServerConfirmedInputTick = Math.Max(lastServerConfirmedInputTick, serverState.confirmedInputTick);
+                OnReconciliationPerformed?.Invoke();
+                return;
+            }
+
+            // Compare positions to determine if correction required
+            var historyState = StateBuffer[serverState.tick];
+            float error = Vector2.Distance(historyState.position, serverState.position);
+            lastServerConfirmedInputTick = Math.Max(lastServerConfirmedInputTick, serverState.confirmedInputTick);
+
+            if (error <= RECONCILIATION_TOLERANCE)
+            {
+                // No correction needed
+                OnReconciliationPerformed?.Invoke();
+                return;
+            }
+
+            // Spiral guard
+            if (delta > MAX_RESIM_STEPS)
+            {
+                // Hard snap to avoid expensive resimulation
+                StateBuffer[serverState.tick] = serverState;
+                CurrentTick = serverState.tick + 1;
+                _timer = 0f;
+                OnReconciliationPerformed?.Invoke();
+                return;
+            }
+
+            // Perform resimulation from serverState.tick + 1 to CurrentTick - 1
+            StateBuffer[serverState.tick] = serverState;
+
+            for (uint t = serverState.tick + 1; t < CurrentTick; t++)
+            {
+                // Choose input: prefer local history, else fallback to last confirmed or zero
+                InputPayload inputToUse;
+                if (InputBuffer.Contains(t))
+                {
+                    inputToUse = InputBuffer[t];
+                }
+                else if (InputBuffer.Contains(lastServerConfirmedInputTick) && lastServerConfirmedInputTick != 0)
+                {
+                    inputToUse = InputBuffer[lastServerConfirmedInputTick];
+                }
+                else
+                {
+                    inputToUse = new InputPayload { tick = t, inputVector = Vector2.zero };
+                }
+
+                var temp = StateBuffer[t - 1];
+                SimulationMath.Integrate(ref temp, ref inputToUse);
+                StateBuffer[t] = temp;
+            }
+
+            OnReconciliationPerformed?.Invoke();
         }
     }
 }

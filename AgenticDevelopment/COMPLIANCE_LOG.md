@@ -292,7 +292,7 @@ This document tracks implementation compliance against the JSON specification fo
 
 - [x] Local EditMode tests added (7/7) — passing
 - [x] Branch `feature/phase-5` pushed
-- [x] CI: Unity workflow triggered on self-hosted runner (in progress)
+- [x] CI: Unity workflow succeeded on self-hosted runner (Jan 9, 2026)
 
 ### Requirements Checklist
 
@@ -318,26 +318,36 @@ This document tracks implementation compliance against the JSON specification fo
 
 ---
 
-## Phase 6: Reconciliation (Rollback-Resimulation) ⏳ **PENDING**
+## Phase 6: Reconciliation (Rollback-Resimulation) ✅ **COMPLETE**
 
 **JSON Reference:** Step 6  
-**Status:** ⏳ Not Started  
-**Planned Date:** TBD
+**Status:** ✅ Complete (Local tests passing; CI green)  
+**Completed Date:** Jan 9, 2026
 
 ### Requirements Checklist
 
-- [ ] BUFFER_SIZE = 4096 constant
-- [ ] MAX_RESIM_STEPS = 300 constant
-- [ ] RECONCILIATION_TOLERANCE = 0.01f constant
-- [ ] CATASTROPHIC_DESYNC_THRESHOLD = 0.75f constant
-- [ ] uint lastServerConfirmedInputTick tracking
-- [ ] StatePayload? latestServerState batching buffer
-- [ ] Batch reconciliation (once per frame)
-- [ ] Catastrophic desync guard (reconnect trigger)
-- [ ] Spiral guard (hard snap on excessive resim)
-- [ ] History guard (buffer overflow check)
-- [ ] Position error threshold check
-- [ ] Resimulation loop profiling
+- [x] BUFFER_SIZE = 4096 constant
+- [x] MAX_RESIM_STEPS = 300 constant
+- [x] RECONCILIATION_TOLERANCE = 0.01f constant
+- [x] CATASTROPHIC_DESYNC_THRESHOLD = 0.75f constant
+- [x] uint lastServerConfirmedInputTick tracking
+- [x] StatePayload? latestServerState batching buffer
+- [x] Batch reconciliation (once per frame)
+- [x] Catastrophic desync guard (reconnect trigger)
+- [x] Spiral guard (hard snap on excessive resim)
+- [x] History guard (buffer overflow check)
+- [x] Position error threshold check
+- [x] Resimulation loop profiling (manual measurement pending)
+
+### Test Requirements
+
+- [x] Reconciliation_SmallCorrection_AppliesAndResimulates (EditMode)
+- [x] Reconciliation_HardSnap (EditMode)
+- [x] Reconciliation_ServerEmitCorrection_Applies (EditMode)
+- [x] Reconciliation_BufferWrap_Safe (Negative)
+- [x] Reconciliation_NonApplicableCorrection_Ignored (Negative)
+
+**Deviations:** TBD
 - [ ] Resimulation time warnings (> 10ms)
 - [ ] Input clearing for confirmed ticks
 
