@@ -3,7 +3,8 @@
     "rootNamespace": "DeterministicRollback.Entities",
     "references": [
         "GUID:419a949562f3e254286b18f50facdc7c",
-        "GUID:c04d3943eda9bb04980532b6b11b1fa7"
+        "GUID:c04d3943eda9bb04980532b6b11b1fa7",
+        "Unity.ugui"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

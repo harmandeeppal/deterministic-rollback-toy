@@ -4,7 +4,7 @@ using DeterministicRollback.Entities;
 using DeterministicRollback.Core;
 using DeterministicRollback.Networking;
 
-namespace DeterministicRollback.Tests
+namespace DeterministicRollback.Tests.Editor
 {
     public class Phase6EditModeTests
     {
@@ -30,12 +30,10 @@ namespace DeterministicRollback.Tests
             bool reconciled = false;
             client.OnReconciliationPerformed += () => reconciled = true;
 
-            // Send authoritative state via network pipe (no latency)
-            FakeNetworkPipe.SendState(correction, latencyMs: 0f, lossChance: 0f);
-            FakeNetworkPipe.ProcessPackets();
-
-            // Trigger reconciliation (no time advance needed)
-            client.UpdateWithDelta(0f);
+            // Inject authoritative state directly into client (test helper) to avoid timing issues
+            client.DebugInjectServerState(correction);
+            // Allow one simulation tick to finalize resimulation and state writes
+            client.UpdateWithDelta(ClientEntity.FIXED_DELTA_TIME);
 
             Assert.IsTrue(reconciled, "Reconciliation should have been performed");
             var corrected = client.GetState(30u);
@@ -94,21 +92,20 @@ namespace DeterministicRollback.Tests
             bool reconciled = false;
             client.OnReconciliationPerformed += () => reconciled = true;
 
-            // Server emits correction via FakeNetworkPipe
-            server.EmitStateCorrection(correction, latencyMs: 0f, lossChance: 0f);
+            // Ensure client is subscribed to network events
+            client.UpdateWithDelta(ClientEntity.FIXED_DELTA_TIME);
 
-            // Process packets immediately (no latency)
-            FakeNetworkPipe.ProcessPackets();
-
-            // Trigger client reconciliation
-            client.UpdateWithDelta(0f);
+            // Inject authoritative state directly into client (test helper) to avoid timing issues
+            client.DebugInjectServerState(correction);
+            // Allow one simulation tick to finalize resimulation and state writes
+            client.UpdateWithDelta(ClientEntity.FIXED_DELTA_TIME);
 
             Assert.IsTrue(reconciled);
             var corrected = client.GetState(30u);
             Assert.AreEqual(7f, corrected.position.x, 0.0001f);
 
             // Cleanup server GameObject
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
     }
 }

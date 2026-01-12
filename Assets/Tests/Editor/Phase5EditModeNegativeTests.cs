@@ -2,7 +2,7 @@ using NUnit.Framework;
 using UnityEngine;
 using DeterministicRollback.Core;
 
-namespace DeterministicRollback.Tests
+namespace DeterministicRollback.Tests.Editor
 {
     public class Phase5EditModeNegativeTests
     {

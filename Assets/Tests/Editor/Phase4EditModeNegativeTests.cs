@@ -31,7 +31,7 @@ namespace DeterministicRollback.Tests.Editor
             // Timer should not be reset to zero (some backlog remains)
             Assert.Greater(server.GetTimer(), 0f);
 
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace DeterministicRollback.Tests.Editor
             FakeNetworkPipe.ProcessPackets();
 
             Assert.IsFalse(server.ServerInputBuffer.Contains(0));
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
 
         [Test]
@@ -67,7 +67,7 @@ namespace DeterministicRollback.Tests.Editor
             FakeNetworkPipe.ProcessPackets();
 
             Assert.IsFalse(server.ServerInputBuffer.Contains(futureInput.tick));
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace DeterministicRollback.Tests.Editor
             for (int i = 0; i < 3; i++) server.UpdateWithDelta(1f / 60f);
 
             Assert.GreaterOrEqual(server.lastConfirmedInputTick, 5u);
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
     }
 }

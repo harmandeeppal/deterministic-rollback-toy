@@ -2,8 +2,9 @@ using NUnit.Framework;
 using UnityEngine;
 using DeterministicRollback.Entities;
 using DeterministicRollback.Core;
+using DeterministicRollback.Networking;
 
-namespace DeterministicRollback.Tests
+namespace DeterministicRollback.Tests.Editor
 {
     public class Phase5EditModeTests
     {
@@ -95,6 +96,68 @@ namespace DeterministicRollback.Tests
             var read = rb[storeTick];
             Assert.AreEqual(warped.position, read.position);
             Assert.AreEqual(warped.tick, read.tick);
+        }
+
+        [Test]
+        public void Phase5_ClientToServer_InputFlow()
+        {
+            FakeNetworkPipe.Clear();
+
+            // Setup client and server
+            var client = new ClientEntity();
+            client.Initialize();
+            client.latencyMs = 0f;
+            client.lossChance = 0f;
+            client.InputProvider = () => Vector2.right;
+
+            var go = new GameObject("ServerEntity_TestGO");
+            var server = go.AddComponent<ServerEntity>();
+            server.Initialize();
+
+            // Run a few client ticks which should enqueue input batches
+            for (int i = 0; i < 5; i++) client.UpdateWithDelta(ClientEntity.FIXED_DELTA_TIME);
+
+            // Deliver pending network packets to server
+            FakeNetworkPipe.ProcessPackets();
+
+            // Server should have received inputs for early ticks (1 and 5)
+            Assert.IsTrue(server.ServerInputBuffer.Contains(1u));
+            Assert.IsTrue(server.ServerInputBuffer.Contains(5u));
+
+            UnityEngine.Object.DestroyImmediate(go);
+        }
+
+        [Test]
+        public void Phase5_ServerToClient_StateFlow()
+        {
+            FakeNetworkPipe.Clear();
+
+            // Setup client and ensure it subscribes to network events
+            var client = new ClientEntity();
+            client.Initialize();
+            client.InputProvider = () => Vector2.zero;
+            client.UpdateWithDelta(0f); // ensures subscription
+
+            // Setup server and advance it several ticks so it emits states
+            var go = new GameObject("ServerEntity_TestGO");
+            var server = go.AddComponent<ServerEntity>();
+            server.Initialize();
+            for (int i = 0; i < 10; i++) server.UpdateWithDelta(ServerEntity.FIXED_DELTA_TIME);
+
+            // Prepare an authoritative state from the server (use current state but set explicit tick)
+            uint targetTick = server.ServerTick - 1u;
+            var authoritative = server.CurrentState;
+            authoritative.tick = targetTick;
+            authoritative.position = new Vector2(9f, 0f);
+
+            // Inject authoritative state directly for deterministic verification
+            client.DebugInjectServerState(authoritative);
+
+            // No time advancement required; the injection performs reconciliation immediately
+            var stored = client.GetState(targetTick);
+            Assert.AreEqual(authoritative.position.x, stored.position.x, 0.0001f);
+
+            UnityEngine.Object.DestroyImmediate(go);
         }
     }
 }

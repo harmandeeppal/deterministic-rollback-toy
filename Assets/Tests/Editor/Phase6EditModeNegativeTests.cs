@@ -1,8 +1,10 @@
 using NUnit.Framework;
 using UnityEngine;
 using DeterministicRollback.Core;
+using DeterministicRollback.Entities;
+using DeterministicRollback.Networking;
 
-namespace DeterministicRollback.Tests
+namespace DeterministicRollback.Tests.Editor
 {
     public class Phase6EditModeNegativeTests
     {
@@ -35,7 +37,9 @@ namespace DeterministicRollback.Tests
             var ancient = new StatePayload { tick = 1u, position = Vector2.zero, velocity = Vector2.zero, confirmedInputTick = 0 };
 
             // Should not throw; after reconciliation CurrentTick should be > 1
-            FakeNetworkPipe.OnStateReceived?.Invoke(ancient);
+            // Send ancient correction via network pipe
+            FakeNetworkPipe.SendState(ancient, latencyMs: 0f, lossChance: 0f);
+            FakeNetworkPipe.ProcessPackets();
             client.UpdateWithDelta(0f);
 
             Assert.Greater(client.CurrentTick, 1u);

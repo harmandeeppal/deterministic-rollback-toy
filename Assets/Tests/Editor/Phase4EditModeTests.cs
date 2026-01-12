@@ -30,7 +30,7 @@ namespace DeterministicRollback.Tests.Editor
             }
 
             Assert.AreEqual(6000u, server.ServerTick - initial);
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
 
         [Test]
@@ -47,7 +47,7 @@ namespace DeterministicRollback.Tests.Editor
             FakeNetworkPipe.ProcessPackets();
 
             Assert.IsTrue(server.ServerInputBuffer.Contains(5));
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
 
         [Test]
@@ -66,7 +66,7 @@ namespace DeterministicRollback.Tests.Editor
             for (int i = 0; i < 15; i++) server.UpdateWithDelta(1f / 60f);
 
             Assert.Greater(server.ServerTick, 10u);
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
 
         [Test]
@@ -89,7 +89,7 @@ namespace DeterministicRollback.Tests.Editor
             for (int i = 0; i < 5; i++) server.UpdateWithDelta(1f / 60f);
 
             Assert.AreEqual(9u, server.lastConfirmedInputTick);
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
 
         [Test]
@@ -106,7 +106,7 @@ namespace DeterministicRollback.Tests.Editor
             // Allow small noise, but ensure no large allocations in hot path
             Assert.IsTrue(after - before < 1024);
 
-            Object.DestroyImmediate(go);
+            UnityEngine.Object.DestroyImmediate(go);
         }
     }
 }

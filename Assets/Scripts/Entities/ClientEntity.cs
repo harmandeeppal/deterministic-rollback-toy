@@ -173,6 +173,29 @@ namespace DeterministicRollback.Entities
             return StateBuffer.Contains(tick) ? StateBuffer[tick] : default;
         }
 
+        /// <summary>
+        /// Expose the internal accumulator timer for interpolation calculations and tests.
+        /// Read-only in normal operation; use <see cref="DebugSetTimer(float)"/> in tests to set directly.
+        /// </summary>
+        public float Timer => _timer;
+
+        /// <summary>
+        /// Test helper: set the internal accumulator timer for deterministic test scenarios.
+        /// Only intended for use in EditMode tests.
+        /// </summary>
+        public void DebugSetTimer(float t)
+        {
+            _timer = t;
+        }
+
+        /// <summary>
+        /// Test helper: set the currentTick for deterministic tests.
+        /// </summary>
+        public void DebugSetCurrentTick(uint tick)
+        {
+            CurrentTick = tick;
+        }
+
         // Handshake support (Phase 5)
         public uint lastServerConfirmedInputTick { get; private set; } = 0;
         public const uint INPUT_BUFFER_HEADROOM = 2;
@@ -251,7 +274,13 @@ namespace DeterministicRollback.Entities
             // Guard: ensure we have reasonable history
             if (CurrentTick == 0)
             {
-                // Nothing to reconcile yet
+                // No local history yet; accept the authoritative server state as the starting point
+                // Write authoritative state into StateBuffer and set CurrentTick to serverTick
+                StateBuffer[serverState.tick] = serverState;
+                CurrentTick = serverState.tick; // last simulated tick is now the authoritative tick
+                _timer = 0f;
+                lastServerConfirmedInputTick = Math.Max(lastServerConfirmedInputTick, serverState.confirmedInputTick);
+                OnReconciliationPerformed?.Invoke();
                 return;
             }
 
@@ -314,6 +343,12 @@ namespace DeterministicRollback.Entities
             // Perform resimulation from serverState.tick + 1 to CurrentTick - 1
             StateBuffer[serverState.tick] = serverState;
 
+            // Sanity: verify the write succeeded; if not, attempt rewrite
+            if (!StateBuffer.Contains(serverState.tick) || StateBuffer[serverState.tick].position != serverState.position)
+            {
+                StateBuffer[serverState.tick] = serverState; // retry write
+            }
+
             for (uint t = serverState.tick + 1; t < CurrentTick; t++)
             {
                 // Choose input: prefer local history, else fallback to last confirmed or zero
@@ -336,7 +371,28 @@ namespace DeterministicRollback.Entities
                 StateBuffer[t] = temp;
             }
 
+            // Final authoritative write: ensure authoritative tick holds server state
+            StateBuffer[serverState.tick] = serverState;
+
+            // Final sanity: ensure authoritative tick matches (defensive fallback)
+            if (!StateBuffer.Contains(serverState.tick) || StateBuffer[serverState.tick].position != serverState.position)
+            {
+                // As a defensive measure, perform a hard snap to authoritative state
+                StateBuffer[serverState.tick] = serverState;
+                CurrentTick = serverState.tick + 1;
+                _timer = 0f;
+                OnReconciliationPerformed?.Invoke();
+                return;
+            }
+
             OnReconciliationPerformed?.Invoke();
+        }
+
+        // Test helper: force inject a server state and run reconciliation immediately
+        public void DebugInjectServerState(StatePayload state)
+        {
+            _latestServerState = state;
+            PerformReconciliationIfNeeded();
         }
     }
 }

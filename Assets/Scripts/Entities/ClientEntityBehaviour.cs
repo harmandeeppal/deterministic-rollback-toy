@@ -18,6 +18,11 @@ namespace DeterministicRollback.Behaviours
         private ClientEntity _client;
 
         /// <summary>
+        /// Expose the underlying ClientEntity instance for other components and tests.
+        /// </summary>
+        public ClientEntity Client => _client;
+
+        /// <summary>
         /// Initialize the underlying ClientEntity and set up input provider.
         /// </summary>
         void Start()
