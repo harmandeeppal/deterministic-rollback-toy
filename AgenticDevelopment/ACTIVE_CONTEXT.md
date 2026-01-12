@@ -68,10 +68,20 @@
   - Negative test file structure matches Phases 1-6 pattern
   - ADR-015 compliance: Inspector-only configuration accepted (runtime Canvas UI deferred)
 
+- **Phase 8: Visual Debugging** ✅ COMPLETE
+  - DebugCubes.cs MonoBehaviour (Red=server, Green=client prediction, Blue=render cubes)
+  - Error vector visualization (red line showing desync magnitude)
+  - State history trail (green semi-transparent path, last 120 ticks)
+  - Zero-GC verified: OnDrawGizmos ≤1KB per 100 calls
+  - Tests: 8/8 passing (3 core + 5 negative EditMode)
+  - Gizmo colors: Red (server truth), Green (client prediction), Blue (interpolated render)
+  - Threshold guard: Error vector visible only when magnitude > 0.01f (avoids visual clutter)
+  - Wraparound safe: History trail handles buffer boundaries correctly
+
 ### Current Focus 🚀
-- **GIT_COMMIT_CLEANUP: Phase 7 Commit Preparation**
-  - Status: All files modified, tests passing (57/57 total), ready for commit
-  - Next: Execute git commit with prepared message below
+- **GIT_COMMIT_CLEANUP: Phase 8 Commit Preparation**
+  - Status: All files created, tests passing (65/65 total), ready for commit
+  - Next: Execute git commit with prepared message
 
 Phase 3 implementation finished with comprehensive test coverage. Self-hosted CI runner configured and validating all commits
 - Phase 3: Client Core (Simulation loop with input redundancy)

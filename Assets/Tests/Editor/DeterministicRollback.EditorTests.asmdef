@@ -8,7 +8,8 @@
     "GUID:75469ad4d38634e559750d17036d5f7c",
     "GUID:419a949562f3e254286b18f50facdc7c",
     "GUID:c04d3943eda9bb04980532b6b11b1fa7",
-    "DeterministicRollback.Entities"
+    "DeterministicRollback.Entities",
+    "GUID:783da9d0b5d562845a75c34aa4135446"
   ],
   "includePlatforms": [
     "Editor"
